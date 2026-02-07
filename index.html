@@ -7,25 +7,26 @@
     <link rel="icon" type="image/jpeg" href="https://i.ibb.co/9kJdY7L2/icon.jpg">
     <link rel="apple-touch-icon" href="https://i.ibb.co/9kJdY7L2/icon.jpg">
     <meta name="mobile-web-app-capable" content="yes">
-
     <style>
-        /* YOUR STYLES */
-        body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; overscroll-behavior: none; }
-        #login-screen { text-align: center; padding-top: 80px; display: block; }
-        #app-screen { display: none; }
-        
-        .sticky-header { position: sticky; top: 0; background: #000; z-index: 100; padding: 10px; border-bottom: 2px solid #222; }
-        .pot-box { background: #ffcc00; color: #000; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 1.6rem; text-align: center; }
-        
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 80px; }
+        .sticky-header { position: sticky; top: 0; background: #000; z-index: 100; padding: 15px; border-bottom: 2px solid #222; }
+        .pot-box { background: #ffcc00; color: #000; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 1.8rem; text-align: center; }
         input { font-size: 16px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; padding: 12px; width: 90%; margin: 10px auto; display: block; }
-        
         .person-row { display: flex; border-bottom: 1px solid #222; align-items: center; background: #000; }
-        .name-zone { flex: 1; padding: 18px 15px; cursor: pointer; }
-        .name-text { font-weight: bold; letter-spacing: 1px; text-transform: uppercase; display: block; }
-        .amount-text { color: #28a745; font-size: 1.2rem; font-weight: 800; }
-        .history-btn { padding: 20px 25px; cursor: pointer; border-left: 1px solid #222; font-size: 20px; }
+        .name-zone { flex: 1; padding: 20px 15px; cursor: pointer; }
+        .name-text { font-weight: bold; text-transform: uppercase; display: block; }
+        .amount-text { color: #28a745; font-size: 1.3rem; font-weight: 800; }
+        .action-btn { padding: 15px; background: #333; color: #fff; border: none; border-radius: 8px; margin: 5px; font-weight: bold; width: 90%; align-self: center; }
         
-        .admin-btn { width: 90%; margin: 10px auto; padding: 15px; border-radius: 8px; border: none; font-weight: bold; display: block; }
+        /* PRINT STYLES */
+        @media print {
+            body { background: white; color: black; }
+            .sticky-header, .action-btn, #login-screen { display: none !important; }
+            .person-row { border-bottom: 1px solid #ccc; color: black; }
+            .amount-text { color: black; }
+        }
+        #login-screen { text-align: center; padding-top: 80px; }
+        #app-screen { display: none; }
     </style>
 </head>
 <body>
@@ -33,8 +34,8 @@
 <div id="login-screen">
     <div style="font-size: 60px;">💰</div>
     <h2>LOTTERY PRO</h2>
-    <input type="password" id="pinInput" placeholder="ENTER PIN" maxlength="4" inputmode="numeric">
-    <button onclick="checkPin()" style="background:#28a745; color:white; padding:15px 40px; border-radius:8px; border:none; font-weight:bold;">UNLOCK</button>
+    <input type="password" id="pinInput" placeholder="PIN" maxlength="4" inputmode="numeric">
+    <button onclick="checkPin()" style="background:#28a745; color:white; padding:15px 40px; border-radius:8px; border:none;">UNLOCK</button>
 </div>
 
 <div id="app-screen">
@@ -43,144 +44,76 @@
         <input type="text" id="searchInput" placeholder="Search names..." onkeyup="renderButtons()">
     </div>
 
-    <button id="start-btn" class="admin-btn" onclick="startLottery()"></button>
-
     <div id="button-grid"></div>
 
-    <button class="admin-btn" style="background:#444; color:white;" onclick="shareStatus()">📋 COPY WHATSAPP UPDATE</button>
+    <div style="text-align: center; padding-top: 20px;">
+        <button class="action-btn" style="background:#25D366;" onclick="shareFullList()">📤 SHARE LIST TO WHATSAPP</button>
+        <button class="action-btn" style="background:#555;" onclick="window.print()">🖨️ PRINT SHEET</button>
+        <button class="action-btn" style="background:#d9534f;" onclick="startNewWeek()">🚀 START NEW WEEK</button>
+    </div>
 </div>
 
 <script>
-    const CORRECT_PIN = "1234"; 
-
-    let names = JSON.parse(localStorage.getItem('lotteryNames')) || Array.from({length: 20}, (_, i) => `PLAYER ${i + 1}`);
-    let ledger = JSON.parse(localStorage.getItem('lotteryLedger')) || {};
-    let startDate = localStorage.getItem('lotteryStartDate'); 
+    const PIN = "1234";
+    let names = JSON.parse(localStorage.getItem('LottoNames')) || Array.from({length: 10}, (_, i) => `PLAYER ${i + 1}`);
+    let ledger = JSON.parse(localStorage.getItem('LottoLedger')) || {};
 
     function checkPin() {
-        const input = document.getElementById('pinInput');
-        const entered = input.value;
-        if (entered === "9999") {
-            if(confirm("WIPE ALL DATA?")) { localStorage.clear(); location.reload(); }
-            return;
-        }
-        if (entered === CORRECT_PIN) {
-            showApp();
-        } else {
-            alert("WRONG PIN. TRY 1234");
-            input.value = "";
-        }
-    }
-
-    function showApp() {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-screen').style.display = 'block';
-        updateStartButtonVisibility();
-        renderButtons();
-    }
-
-    function startLottery() {
-        const verify = prompt("RESET EVERYTHING? ENTER PIN:");
-        if (verify === CORRECT_PIN) {
-            startDate = new Date().toISOString();
-            localStorage.setItem('lotteryStartDate', startDate);
-            ledger = {}; 
-            saveAll();
-            updateStartButtonVisibility();
+        if (document.getElementById('pinInput').value === PIN) {
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
             renderButtons();
-        }
-    }
-
-    function updateStartButtonVisibility() {
-        const btn = document.getElementById('start-btn');
-        btn.style.background = "#d9534f"; 
-        btn.innerHTML = startDate ? `🚀 RESET & START NEW (WEEK ${getLotteryWeek()})` : "🚀 START WEEK 1";
+        } else { alert("WRONG PIN"); }
     }
 
     function addPayment(index) {
-        if (!startDate) return alert("PRESS RED BUTTON FIRST!");
         const name = names[index];
-        if (!ledger[name]) ledger[name] = { total: 0, history: [], lastPaid: null };
-        const now = new Date();
+        if (!ledger[name]) ledger[name] = { total: 0 };
         ledger[name].total += 5;
-        ledger[name].history.push(`WEEK ${getLotteryWeek()}: PAID €5 ON ${now.toLocaleDateString('en-GB')}`);
-        ledger[name].lastPaid = now.toISOString();
-        saveAll();
+        save();
         renderButtons();
+        
+        // AUTO-SEND WHATSAPP RECEIPT
+        if (confirm(`Send Receipt to ${name}?`)) {
+            const msg = encodeURIComponent(`✨ LOTTO PRO RECEIPT ✨\n👤 Name: ${name}\n💰 Paid: €5\n📈 Your Total: €${ledger[name].total}\n✅ Thank you!`);
+            window.open(`https://wa.me/?text=${msg}`);
+        }
+    }
+
+    function shareFullList() {
+        let text = `📝 SYNDICATE UPDATE\n💰 TOTAL POT: €${document.getElementById('pot-display').innerText}\n\n`;
+        names.forEach(n => { text += `${n}: €${ledger[n]?.total || 0}\n`; });
+        window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
+    }
+
+    function startNewWeek() {
+        if(confirm("Start new week? (This doesn't wipe totals, just marks a new phase)")) {
+            alert("New week started!");
+        }
     }
 
     function renderButtons() {
         const grid = document.getElementById('button-grid');
-        const searchTerm = document.getElementById('searchInput')?.value.toUpperCase() || "";
+        const search = document.getElementById('searchInput').value.toUpperCase();
         grid.innerHTML = '';
         let total = 0;
-
         names.forEach((name, i) => {
-            if (!name.toUpperCase().includes(searchTerm)) return;
-            const data = ledger[name] || { total: 0, history: [], lastPaid: null };
-            total += data.total;
-            let paidStatus = "";
-            if (data.lastPaid) {
-                const diffDays = (new Date() - new Date(data.lastPaid)) / (1000 * 60 * 60 * 24);
-                if (diffDays < 7) {
-                    paidStatus = `<span style="background:#28a745; color:white; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:5px;">PAID</span>`;
-                }
-            }
+            if (!name.toUpperCase().includes(search)) return;
+            const val = ledger[name]?.total || 0;
+            total += val;
             const row = document.createElement('div');
             row.className = 'person-row';
-            row.innerHTML = `
-                <div class="name-zone" onclick="addPayment(${i})">
-                    <span class="name-text">${name.toUpperCase()}</span> ${paidStatus}
-                    <div class="amount-text">€${data.total}</div>
-                </div>
-                <div class="history-btn" onclick="showHistory(${i})">📋</div>
-            `;
+            row.innerHTML = `<div class="name-zone" onclick="addPayment(${i})">
+                <span class="name-text">${name}</span>
+                <span class="amount-text">€${val}</span>
+            </div>`;
             grid.appendChild(row);
         });
         document.getElementById('pot-display').innerText = `€${total}`;
     }
 
-    function showHistory(index) {
-        const oldName = names[index];
-        const action = prompt(`SETTINGS FOR ${oldName}:\n1. TYPE 'NAME' to rename\n2. TYPE 'DELETE' to minus €5\n3. OK for history`);
-        if (action?.toUpperCase() === 'NAME') {
-            let newName = prompt("NEW NAME:");
-            if (newName) {
-                newName = newName.trim().toUpperCase();
-                if (ledger[oldName]) { ledger[newName] = ledger[oldName]; delete ledger[oldName]; }
-                names[index] = newName;
-                saveAll();
-                renderButtons();
-            }
-        } else if (action?.toUpperCase() === 'DELETE') {
-            if (ledger[oldName] && ledger[oldName].total > 0) {
-                ledger[oldName].total -= 5;
-                ledger[oldName].history.pop();
-                saveAll();
-                renderButtons();
-            }
-        } else {
-            alert(`${oldName} HISTORY:\n\n${ledger[oldName]?.history.join('\n') || "NO HISTORY"}`);
-        }
-    }
-
-    function shareStatus() {
-        let text = `📝 UPDATE (WEEK ${getLotteryWeek()})\n💰 POT: €${document.getElementById('pot-display').innerText}\n\n`;
-        names.forEach(n => { text += `${n}: €${ledger[n]?.total || 0}\n`; });
-        navigator.clipboard.writeText(text);
-        alert("COPIED TO CLIPBOARD!");
-    }
-
-    function getLotteryWeek() {
-        if (!startDate) return 0;
-        const diff = new Date() - new Date(startDate);
-        return Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1;
-    }
-
-    function saveAll() {
-        localStorage.setItem('lotteryNames', JSON.stringify(names));
-        localStorage.setItem('lotteryLedger', JSON.stringify(ledger));
-        localStorage.setItem('lotteryStartDate', startDate);
+    function save() {
+        localStorage.setItem('LottoLedger', JSON.stringify(ledger));
     }
 </script>
 </body>
