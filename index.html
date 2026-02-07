@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lotto Pro</title>
+    <style>
+        body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; }
+        input { padding: 15px; font-size: 20px; width: 60%; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; margin-bottom: 20px; }
+        button { padding: 15px 40px; background: #28a745; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
+        #app { display: none; padding: 20px; }
+        .pot { font-size: 2rem; color: #28a745; margin-bottom: 20px; border: 2px solid #28a745; padding: 20px; border-radius: 10px; }
+        .list { text-align: left; max-width: 250px; margin: auto; line-height: 2; }
+    </style>
+</head>
+<body>
+
+    <div id="login">
+        <h1>💰 LOTTO PRO</h1>
+        <input type="password" id="pin" placeholder="Enter PIN" inputmode="numeric">
+        <br>
+        <button onclick="check()">UNLOCK</button>
+    </div>
+
+    <div id="app">
+        <div class="pot">TOTAL POT: €240</div>
+        <h3>SYNDICATE LIST</h3>
+        <div class="list">
+            <p>✅ Player 1: €40</p>
+            <p>✅ Player 2: €40</p>
+            <p>✅ Player 3: €40</p>
+            <p>✅ Player 4: €40</p>
+            <p>✅ Player 5: €40</p>
+            <p>✅ Player 6: €40</p>
+        </div>
+    </div>
+
+    <script>
+        function check() {
+            const entry = document.getElementById('pin').value;
+            if(entry === "1234") {
+                document.getElementById('login').style.display = "none";
+                document.getElementById('app').style.display = "block";
+            } else { 
+                alert("Wrong PIN"); 
+            }
+        }
+    </script>
+
+</body>
+</html>
