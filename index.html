@@ -10,18 +10,15 @@
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         .sticky-header { position: sticky; top: 0; background: #000; z-index: 100; padding: 15px; border-bottom: 2px solid #222; }
         .pot-box { background: #ffcc00; color: #000; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 1.8rem; text-align: center; }
-        
         .person-row { display: flex; border-bottom: 1px solid #222; align-items: center; background: #000; height: 80px; }
-        
         .name-zone { flex: 1; padding: 10px 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; height: 100%; }
         .name-text { font-weight: bold; text-transform: uppercase; font-size: 1.1rem; }
         .amount-text { color: #28a745; font-size: 1.3rem; font-weight: 800; }
-        
         .side-btn { padding: 0 18px; cursor: pointer; border-left: 1px solid #222; font-size: 22px; height: 100%; display: flex; align-items: center; justify-content: center; }
         .wa-btn { color: #25D366; background: #050505; }
         .hist-btn { color: #888; background: #0a0a0a; }
-        
         .action-btn { padding: 15px; background: #333; color: #fff; border: none; border-radius: 8px; margin: 10px auto; font-weight: bold; width: 92%; display: block; font-size: 1rem; }
+        .reset-btn { background: #d9534f; color: white; margin-top: 40px; }
         #login-screen { text-align: center; padding-top: 80px; }
         #app-screen { display: none; }
         input[type="password"] { font-size: 24px; padding: 12px; width: 60%; text-align: center; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: #fff; }
@@ -44,9 +41,10 @@
 
     <div id="button-grid"></div>
 
-    <div style="padding-top: 20px;">
+    <div style="padding-top: 20px; text-align: center;">
         <button class="action-btn" style="background:#25D366;" onclick="shareFullList()">📤 SHARE FULL LIST TO GROUP</button>
         <button class="action-btn" onclick="window.print()">🖨️ PRINT SHEET</button>
+        <button class="action-btn reset-btn" onclick="masterReset()">⚠️ MASTER RESET EVERYTHING</button>
     </div>
 </div>
 
@@ -63,7 +61,7 @@
         } else { alert("WRONG PIN"); }
     }
 
-    // ADDS MONEY ONLY
+    // ADDS MONEY ONLY - NO WHATSAPP TRIGGERED HERE
     function addPayment(index) {
         const name = names[index];
         if (!ledger[name]) ledger[name] = { total: 0, history: [] };
@@ -74,12 +72,24 @@
         renderButtons();
     }
 
-    // SENDS RECEIPT ONLY
+    // SENDS RECEIPT ONLY WHEN THIS SYMBOL IS PRESSED
     function sendReceipt(index) {
         const name = names[index];
         const total = ledger[name]?.total || 0;
         const msg = encodeURIComponent(`*✨ LOTTO PRO RECEIPT ✨*\n\n👤 *PLAYER:* ${name}\n💰 *LATEST:* €5 Added\n📈 *YOUR TOTAL:* €${total}\n\n✅ _Recorded in Syndicate Ledger_`);
-        window.open(`https://wa.me/?text=${msg}`);
+        window.open(`https://wa.me/?text=${msg}`, '_blank');
+    }
+
+    function masterReset() {
+        const confirmPin = prompt("ENTER CODE 1234 TO RESET ALL DATA:");
+        if (confirmPin === PIN) {
+            if (confirm("ARE YOU 100% SURE? This wipes all names and money!")) {
+                localStorage.clear();
+                location.reload();
+            }
+        } else {
+            alert("WRONG CODE - RESET CANCELLED");
+        }
     }
 
     function showHistory(index) {
