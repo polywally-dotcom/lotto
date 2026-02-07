@@ -1,61 +1,187 @@
+
 <!DOCTYPE html>
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Lotto Pro</title>
+    <title>LOTTO PRO</title>
     <link rel="icon" type="image/jpeg" href="https://i.ibb.co/9kJdY7L2/icon.jpg">
     <link rel="apple-touch-icon" href="https://i.ibb.co/9kJdY7L2/icon.jpg">
     <meta name="mobile-web-app-capable" content="yes">
-    
+
     <style>
-        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
-        .card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; margin-top: 20px; }
-        input { padding: 15px; font-size: 18px; width: 80%; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; margin-bottom: 15px; }
-        button { padding: 15px 30px; background: #28a745; color: #fff; border: none; border-radius: 8px; font-weight: bold; width: 80%; }
-        #app { display: none; }
-        .pot-display { font-size: 2.5rem; color: #28a745; font-weight: bold; margin: 10px 0; }
-        .player-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #222; }
+        /* YOUR STYLES */
+        body { background-color: #000; color: #fff; font-family: sans-serif; margin: 0; overscroll-behavior: none; }
+        #login-screen { text-align: center; padding-top: 80px; display: block; }
+        #app-screen { display: none; }
+        
+        .sticky-header { position: sticky; top: 0; background: #000; z-index: 100; padding: 10px; border-bottom: 2px solid #222; }
+        .pot-box { background: #ffcc00; color: #000; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 1.6rem; text-align: center; }
+        
+        input { font-size: 16px; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: white; padding: 12px; width: 90%; margin: 10px auto; display: block; }
+        
+        .person-row { display: flex; border-bottom: 1px solid #222; align-items: center; background: #000; }
+        .name-zone { flex: 1; padding: 18px 15px; cursor: pointer; }
+        .name-text { font-weight: bold; letter-spacing: 1px; text-transform: uppercase; display: block; }
+        .amount-text { color: #28a745; font-size: 1.2rem; font-weight: 800; }
+        .history-btn { padding: 20px 25px; cursor: pointer; border-left: 1px solid #222; font-size: 20px; }
+        
+        .admin-btn { width: 90%; margin: 10px auto; padding: 15px; border-radius: 8px; border: none; font-weight: bold; display: block; }
     </style>
 </head>
 <body>
 
-<div id="login">
-    <img src="https://i.ibb.co/9kJdY7L2/icon.jpg" style="width:100px; border-radius:50%; margin-bottom:20px;">
-    <h1>LOTTO PRO</h1>
-    <input type="password" id="pin" placeholder="Enter PIN" inputmode="numeric">
-    <button onclick="check()">UNLOCK</button>
+<div id="login-screen">
+    <div style="font-size: 60px;">💰</div>
+    <h2>LOTTERY PRO</h2>
+    <input type="password" id="pinInput" placeholder="ENTER PIN" maxlength="4" inputmode="numeric">
+    <button onclick="checkPin()" style="background:#28a745; color:white; padding:15px 40px; border-radius:8px; border:none; font-weight:bold;">UNLOCK</button>
 </div>
 
-<div id="app">
-    <div class="card">
-        <small>CURRENT POT</small>
-        <div class="pot-display" id="totalPot">€0</div>
+<div id="app-screen">
+    <div class="sticky-header">
+        <div class="pot-box">TOTAL POT: <span id="pot-display">€0</span></div>
+        <input type="text" id="searchInput" placeholder="Search names..." onkeyup="renderButtons()">
     </div>
 
-    <div class="card" id="playerList">
-        </div>
-    
-    <button onclick="updatePot()" style="background:#444; margin-top:20px; width:50%; font-size:12px;">+ ADD TO POT</button>
+    <button id="start-btn" class="admin-btn" onclick="startLottery()"></button>
+
+    <div id="button-grid"></div>
+
+    <button class="admin-btn" style="background:#444; color:white;" onclick="shareStatus()">📋 COPY WHATSAPP UPDATE</button>
 </div>
 
 <script>
-    let currentPot = 0;
+    const CORRECT_PIN = "1234"; 
 
-    function check() {
-        if(document.getElementById('pin').value === "1234") {
-            document.getElementById('login').style.display = "none";
-            document.getElementById('app').style.display = "block";
-        } else { alert("Access Denied"); }
-    }
+    let names = JSON.parse(localStorage.getItem('lotteryNames')) || Array.from({length: 20}, (_, i) => `PLAYER ${i + 1}`);
+    let ledger = JSON.parse(localStorage.getItem('lotteryLedger')) || {};
+    let startDate = localStorage.getItem('lotteryStartDate'); 
 
-    function updatePot() {
-        let amount = prompt("Enter amount to add:");
-        if (amount) {
-            currentPot += parseFloat(amount);
-            document.getElementById('totalPot').innerText = "€" + currentPot;
+    function checkPin() {
+        const input = document.getElementById('pinInput');
+        const entered = input.value;
+        if (entered === "9999") {
+            if(confirm("WIPE ALL DATA?")) { localStorage.clear(); location.reload(); }
+            return;
+        }
+        if (entered === CORRECT_PIN) {
+            showApp();
+        } else {
+            alert("WRONG PIN. TRY 1234");
+            input.value = "";
         }
     }
-</script>
 
+    function showApp() {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-screen').style.display = 'block';
+        updateStartButtonVisibility();
+        renderButtons();
+    }
+
+    function startLottery() {
+        const verify = prompt("RESET EVERYTHING? ENTER PIN:");
+        if (verify === CORRECT_PIN) {
+            startDate = new Date().toISOString();
+            localStorage.setItem('lotteryStartDate', startDate);
+            ledger = {}; 
+            saveAll();
+            updateStartButtonVisibility();
+            renderButtons();
+        }
+    }
+
+    function updateStartButtonVisibility() {
+        const btn = document.getElementById('start-btn');
+        btn.style.background = "#d9534f"; 
+        btn.innerHTML = startDate ? `🚀 RESET & START NEW (WEEK ${getLotteryWeek()})` : "🚀 START WEEK 1";
+    }
+
+    function addPayment(index) {
+        if (!startDate) return alert("PRESS RED BUTTON FIRST!");
+        const name = names[index];
+        if (!ledger[name]) ledger[name] = { total: 0, history: [], lastPaid: null };
+        const now = new Date();
+        ledger[name].total += 5;
+        ledger[name].history.push(`WEEK ${getLotteryWeek()}: PAID €5 ON ${now.toLocaleDateString('en-GB')}`);
+        ledger[name].lastPaid = now.toISOString();
+        saveAll();
+        renderButtons();
+    }
+
+    function renderButtons() {
+        const grid = document.getElementById('button-grid');
+        const searchTerm = document.getElementById('searchInput')?.value.toUpperCase() || "";
+        grid.innerHTML = '';
+        let total = 0;
+
+        names.forEach((name, i) => {
+            if (!name.toUpperCase().includes(searchTerm)) return;
+            const data = ledger[name] || { total: 0, history: [], lastPaid: null };
+            total += data.total;
+            let paidStatus = "";
+            if (data.lastPaid) {
+                const diffDays = (new Date() - new Date(data.lastPaid)) / (1000 * 60 * 60 * 24);
+                if (diffDays < 7) {
+                    paidStatus = `<span style="background:#28a745; color:white; font-size:10px; padding:2px 6px; border-radius:4px; margin-left:5px;">PAID</span>`;
+                }
+            }
+            const row = document.createElement('div');
+            row.className = 'person-row';
+            row.innerHTML = `
+                <div class="name-zone" onclick="addPayment(${i})">
+                    <span class="name-text">${name.toUpperCase()}</span> ${paidStatus}
+                    <div class="amount-text">€${data.total}</div>
+                </div>
+                <div class="history-btn" onclick="showHistory(${i})">📋</div>
+            `;
+            grid.appendChild(row);
+        });
+        document.getElementById('pot-display').innerText = `€${total}`;
+    }
+
+    function showHistory(index) {
+        const oldName = names[index];
+        const action = prompt(`SETTINGS FOR ${oldName}:\n1. TYPE 'NAME' to rename\n2. TYPE 'DELETE' to minus €5\n3. OK for history`);
+        if (action?.toUpperCase() === 'NAME') {
+            let newName = prompt("NEW NAME:");
+            if (newName) {
+                newName = newName.trim().toUpperCase();
+                if (ledger[oldName]) { ledger[newName] = ledger[oldName]; delete ledger[oldName]; }
+                names[index] = newName;
+                saveAll();
+                renderButtons();
+            }
+        } else if (action?.toUpperCase() === 'DELETE') {
+            if (ledger[oldName] && ledger[oldName].total > 0) {
+                ledger[oldName].total -= 5;
+                ledger[oldName].history.pop();
+                saveAll();
+                renderButtons();
+            }
+        } else {
+            alert(`${oldName} HISTORY:\n\n${ledger[oldName]?.history.join('\n') || "NO HISTORY"}`);
+        }
+    }
+
+    function shareStatus() {
+        let text = `📝 UPDATE (WEEK ${getLotteryWeek()})\n💰 POT: €${document.getElementById('pot-display').innerText}\n\n`;
+        names.forEach(n => { text += `${n}: €${ledger[n]?.total || 0}\n`; });
+        navigator.clipboard.writeText(text);
+        alert("COPIED TO CLIPBOARD!");
+    }
+
+    function getLotteryWeek() {
+        if (!startDate) return 0;
+        const diff = new Date() - new Date(startDate);
+        return Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1;
+    }
+
+    function saveAll() {
+        localStorage.setItem('lotteryNames', JSON.stringify(names));
+        localStorage.setItem('lotteryLedger', JSON.stringify(ledger));
+        localStorage.setItem('lotteryStartDate', startDate);
+    }
+</script>
 </body>
 </html>
