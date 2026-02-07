@@ -10,12 +10,18 @@
         body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding-bottom: 100px; -webkit-tap-highlight-color: transparent; }
         .sticky-header { position: sticky; top: 0; background: #000; z-index: 100; padding: 15px; border-bottom: 2px solid #222; }
         .pot-box { background: #ffcc00; color: #000; padding: 15px; border-radius: 12px; font-weight: 900; font-size: 1.8rem; text-align: center; }
-        .person-row { display: flex; border-bottom: 1px solid #222; align-items: center; background: #000; height: 75px; }
+        
+        .person-row { display: flex; border-bottom: 1px solid #222; align-items: center; background: #000; height: 80px; }
+        
         .name-zone { flex: 1; padding: 10px 15px; cursor: pointer; display: flex; flex-direction: column; justify-content: center; height: 100%; }
-        .name-text { font-weight: bold; text-transform: uppercase; font-size: 1.1rem; letter-spacing: 1px; }
-        .amount-text { color: #28a745; font-size: 1.3rem; font-weight: 800; margin-top: 4px; }
-        .history-btn { padding: 0 25px; cursor: pointer; border-left: 1px solid #222; font-size: 22px; height: 100%; display: flex; align-items: center; justify-content: center; background: #0a0a0a; }
-        .action-btn { padding: 15px; background: #333; color: #fff; border: none; border-radius: 8px; margin: 5px; font-weight: bold; width: 92%; display: block; margin-left: auto; margin-right: auto; font-size: 1rem; }
+        .name-text { font-weight: bold; text-transform: uppercase; font-size: 1.1rem; }
+        .amount-text { color: #28a745; font-size: 1.3rem; font-weight: 800; }
+        
+        .side-btn { padding: 0 18px; cursor: pointer; border-left: 1px solid #222; font-size: 22px; height: 100%; display: flex; align-items: center; justify-content: center; }
+        .wa-btn { color: #25D366; background: #050505; }
+        .hist-btn { color: #888; background: #0a0a0a; }
+        
+        .action-btn { padding: 15px; background: #333; color: #fff; border: none; border-radius: 8px; margin: 10px auto; font-weight: bold; width: 92%; display: block; font-size: 1rem; }
         #login-screen { text-align: center; padding-top: 80px; }
         #app-screen { display: none; }
         input[type="password"] { font-size: 24px; padding: 12px; width: 60%; text-align: center; border-radius: 8px; border: 1px solid #333; background: #1a1a1a; color: #fff; }
@@ -39,7 +45,7 @@
     <div id="button-grid"></div>
 
     <div style="padding-top: 20px;">
-        <button class="action-btn" style="background:#25D366;" onclick="shareFullList()">📤 SHARE FULL LIST TO WHATSAPP</button>
+        <button class="action-btn" style="background:#25D366;" onclick="shareFullList()">📤 SHARE FULL LIST TO GROUP</button>
         <button class="action-btn" onclick="window.print()">🖨️ PRINT SHEET</button>
     </div>
 </div>
@@ -57,32 +63,29 @@
         } else { alert("WRONG PIN"); }
     }
 
-    // THIS HAPPENS EVERY PAYMENT
+    // ADDS MONEY ONLY
     function addPayment(index) {
         const name = names[index];
         if (!ledger[name]) ledger[name] = { total: 0, history: [] };
-        
         ledger[name].total += 5;
         const now = new Date().toLocaleDateString('en-GB');
-        const time = new Date().toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'});
-        ledger[name].history.push(`Paid €5 on ${now} at ${time}`);
-        
+        ledger[name].history.push(`Paid €5 on ${now}`);
         save();
         renderButtons();
-        
-        // AUTO-RECEIPT LOGIC
-        const receiptMsg = encodeURIComponent(`*✨ LOTTO PRO RECEIPT ✨*\n\n👤 *PLAYER:* ${name}\n💰 *PAID:* €5\n📅 *DATE:* ${now}\n📈 *YOUR TOTAL:* €${ledger[name].total}\n\n✅ _Thank you for your payment!_`);
-        
-        // Brief delay so the screen updates before jumping to WhatsApp
-        setTimeout(() => {
-            window.open(`https://wa.me/?text=${receiptMsg}`);
-        }, 300);
+    }
+
+    // SENDS RECEIPT ONLY
+    function sendReceipt(index) {
+        const name = names[index];
+        const total = ledger[name]?.total || 0;
+        const msg = encodeURIComponent(`*✨ LOTTO PRO RECEIPT ✨*\n\n👤 *PLAYER:* ${name}\n💰 *LATEST:* €5 Added\n📈 *YOUR TOTAL:* €${total}\n\n✅ _Recorded in Syndicate Ledger_`);
+        window.open(`https://wa.me/?text=${msg}`);
     }
 
     function showHistory(index) {
         const name = names[index];
         const data = ledger[name] || { total: 0, history: [] };
-        const action = prompt(`SETTINGS FOR ${name}:\n1. Type 'NAME' to rename\n2. Type 'DELETE' to minus €5\n\nLAST 3 PAYMENTS:\n${data.history.slice(-3).join('\n') || 'No history'}`);
+        const action = prompt(`SETTINGS FOR ${name}:\n1. Type 'NAME' to rename\n2. Type 'DELETE' to minus €5\n\nLAST PAYMENTS:\n${data.history.slice(-3).join('\n') || 'No history'}`);
         
         if (action?.toUpperCase() === 'NAME') {
             const newName = prompt("Enter new name:").toUpperCase();
@@ -116,7 +119,8 @@
                     <span class="name-text">${name}</span>
                     <span class="amount-text">€${val}</span>
                 </div>
-                <div class="history-btn" onclick="showHistory(${i})">📋</div>
+                <div class="side-btn wa-btn" onclick="sendReceipt(${i})">💬</div>
+                <div class="side-btn hist-btn" onclick="showHistory(${i})">📋</div>
             `;
             grid.appendChild(row);
         });
