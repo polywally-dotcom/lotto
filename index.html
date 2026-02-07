@@ -1,50 +1,61 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Lotto Pro</title>
+    <link rel="icon" type="image/jpeg" href="https://i.ibb.co/9kJdY7L2/icon.jpg">
+    <link rel="apple-touch-icon" href="https://i.ibb.co/9kJdY7L2/icon.jpg">
+    <meta name="mobile-web-app-capable" content="yes">
+    
     <style>
-        body { background: #111; color: #fff; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        input { padding: 15px; font-size: 20px; width: 60%; border-radius: 8px; border: 1px solid #333; background: #222; color: #fff; margin-bottom: 20px; }
-        button { padding: 15px 40px; background: #28a745; color: #fff; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; }
-        #app { display: none; padding: 20px; }
-        .pot { font-size: 2rem; color: #28a745; margin-bottom: 20px; border: 2px solid #28a745; padding: 20px; border-radius: 10px; }
-        .list { text-align: left; max-width: 250px; margin: auto; line-height: 2; }
+        body { background: #000; color: #fff; font-family: sans-serif; text-align: center; margin: 0; padding: 20px; }
+        .card { background: #111; border: 1px solid #333; border-radius: 15px; padding: 20px; margin-top: 20px; }
+        input { padding: 15px; font-size: 18px; width: 80%; border-radius: 8px; border: 1px solid #444; background: #222; color: #fff; margin-bottom: 15px; }
+        button { padding: 15px 30px; background: #28a745; color: #fff; border: none; border-radius: 8px; font-weight: bold; width: 80%; }
+        #app { display: none; }
+        .pot-display { font-size: 2.5rem; color: #28a745; font-weight: bold; margin: 10px 0; }
+        .player-row { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #222; }
     </style>
 </head>
 <body>
 
-    <div id="login">
-        <h1>💰 LOTTO PRO</h1>
-        <input type="password" id="pin" placeholder="Enter PIN" inputmode="numeric">
-        <br>
-        <button onclick="check()">UNLOCK</button>
+<div id="login">
+    <img src="https://i.ibb.co/9kJdY7L2/icon.jpg" style="width:100px; border-radius:50%; margin-bottom:20px;">
+    <h1>LOTTO PRO</h1>
+    <input type="password" id="pin" placeholder="Enter PIN" inputmode="numeric">
+    <button onclick="check()">UNLOCK</button>
+</div>
+
+<div id="app">
+    <div class="card">
+        <small>CURRENT POT</small>
+        <div class="pot-display" id="totalPot">€0</div>
     </div>
 
-    <div id="app">
-        <div class="pot">TOTAL POT: €240</div>
-        <h3>SYNDICATE LIST</h3>
-        <div class="list">
-            <p>✅ Player 1: €40</p>
-            <p>✅ Player 2: €40</p>
-            <p>✅ Player 3: €40</p>
-            <p>✅ Player 4: €40</p>
-            <p>✅ Player 5: €40</p>
-            <p>✅ Player 6: €40</p>
+    <div class="card" id="playerList">
         </div>
-    </div>
+    
+    <button onclick="updatePot()" style="background:#444; margin-top:20px; width:50%; font-size:12px;">+ ADD TO POT</button>
+</div>
 
-    <script>
-        function check() {
-            const entry = document.getElementById('pin').value;
-            if(entry === "1234") {
-                document.getElementById('login').style.display = "none";
-                document.getElementById('app').style.display = "block";
-            } else { 
-                alert("Wrong PIN"); 
-            }
+<script>
+    let currentPot = 0;
+
+    function check() {
+        if(document.getElementById('pin').value === "1234") {
+            document.getElementById('login').style.display = "none";
+            document.getElementById('app').style.display = "block";
+        } else { alert("Access Denied"); }
+    }
+
+    function updatePot() {
+        let amount = prompt("Enter amount to add:");
+        if (amount) {
+            currentPot += parseFloat(amount);
+            document.getElementById('totalPot').innerText = "€" + currentPot;
         }
-    </script>
+    }
+</script>
 
 </body>
 </html>
